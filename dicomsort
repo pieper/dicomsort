@@ -19,6 +19,9 @@
 import sys, os, traceback
 import shutil
 import time
+import tempfile
+import urllib
+import zipfile
 
 # special public packages
 import dicom
@@ -26,12 +29,13 @@ from dicom.filereader import InvalidDicomError
 
 # }}}
 
+# {{{ DICOMSorter
+
 class DICOMSorter(object):
     """Implements the logic for sorting dicom files from
     a source directory into a target directory tree
     according to a given set of options.
     """
-
 
     def __init__(self):
 
@@ -57,8 +61,6 @@ class DICOMSorter(object):
 
         self.requiredOptions = [ 'sourceDir', 'targetPattern', ]
 
-
-
     def setOptions(self,options):
         """Set the member variable options based on passed dictionary,
         complaining if require options are missing, and filling in
@@ -72,6 +74,69 @@ class DICOMSorter(object):
         self.options = options
         return True
 
+    def renameFiles(self):
+        """Perform the sorting operation by sequentially renaming all
+        the files in the source directory and all it's children
+        """
+        self.filesRenamed = 0
+        self.filesSkipped = 0
+        for root, subFolders, files in os.walk(self.options['sourceDir']):
+            for file in files:
+                if self.options['verbose']:
+                    print("Considering file %s" % file)
+                file = os.path.join(root,file)
+                if self.renameFile(file):
+                    self.filesRenamed += 1
+                else:
+                    self.filesSkipped += 1
+
+    def renameFile(self,file):
+        """Rename a single file according to the current options.
+        Return true on success"""
+        pass
+
+# DICOMSorter }}}
+
+# {{{ Download helper
+
+class DownloadHelper(object):
+    """Class to help download data for testing"""
+
+    def __init__(self):
+        self.downloadPercent = 0
+
+    def humanFormatSize(self,size):
+        """ from http://stackoverflow.com/questions/1094841/reusable-library-to-get-human-readable-version-of-file-size"""
+        for x in ['bytes','KB','MB','GB']:
+            if size < 1024.0 and size > -1024.0:
+                return "%3.1f%s" % (size, x)
+            size /= 1024.0
+        return "%3.1f%s" % (size, 'TB')
+
+    def downloadReportHook(self,blocksSoFar,blockSize,totalSize):
+        percent = int((100. * blocksSoFar * blockSize) / totalSize)
+        if percent == 100 or (percent - self.downloadPercent >= 10):
+            humanSizeSoFar = self.humanFormatSize(blocksSoFar * blockSize)
+            humanSizeTotal = self.humanFormatSize(totalSize)
+            print('Downloaded %s (%d%% of %s)...' %
+                    (humanSizeSoFar, percent, humanSizeTotal))
+            self.downloadPercent = percent
+
+    def downloadFileIfNeeded(self,url,destination,expectedSize):
+        if os.path.exists(destination) and os.stat(destination).st_size == expectedSize:
+            print('File exists %s and is correct size, not downloading' % destination)
+            return True
+        self.downloadPercent = 0
+        print('Requesting download of %s from %s...\n' % (destination, url))
+        try:
+            urllib.urlretrieve(url, destination, self.downloadReportHook)
+            print('Download finished')
+        except IOError as e:
+            print('Download failed: %s' % e)
+            return False
+        return True
+
+# Download helper}}}
 
 # {{{ main, test, and arg parse
 
@@ -91,12 +156,50 @@ def usage():
     print("\n could create a folder structure like:")
     print("\n  sorted/JohnDoe/2013-40-18/FLAIR-2.dcm")
 
+
 def selfTest():
-    print('run a self test here')
-    pass
+    """Run a self test of the DICOMSorter
+    - download a zipfile of test dicom data
+    - extract it in a temp location
+    - sort it using various options
+    - confirm correct results
+    """
+    # perform the download
+    print('Downloading...')
+    testDataURL = "https://s3.amazonaws.com/ec2.isomics.com/dicomsort-testdata.zip"
+    tempfile.TemporaryFile().close() # to set the tempdir variable
+    destination = os.path.join(tempfile.tempdir, 'dicomsort-testdata.zip')
+    expectedSize = 65916934
+    downloader = DownloadHelper()
+    downloader.downloadFileIfNeeded(testDataURL, destination, expectedSize)
+
+    # unzip the data
+    print('Extracting...')
+    dataDir = os.path.join(tempfile.tempdir, 'dicomsort-testdata')
+    fileCount = 0
+    if os.path.exists(dataDir):
+        for root, subFolders, files in os.walk(dataDir):
+            fileCount += len(files)
+        print('Found %d files in %s' % (fileCount, dataDir))
+    if fileCount != 1062 or not os.path.exists(dataDir):
+        if os.path.exists(dataDir):
+            shutil.rmtree(dataDir)
+        archive = zipfile.ZipFile(destination)
+        archive.extractall(dataDir)
+
+    # now run the tests on the downloaded data
+    targetDir = os.path.join(tempfile.tempdir, 'dicomsort-output')
+    targetPattern = targetDir + '/%PatientName/%StudyDesciption/%InstanceNumber.dcm'
+    sorter = DICOMSorter()
+    options = {
+            'sourceDir': dataDir, 'targetPattern': targetPattern,
+            'verbose': True}
+    sorter.setOptions(options)
+    sorter.renameFiles()
+
 
 def parseArgs(sorter,args):
-    """Parse the args into an options dictionary
+    """Parse the command line args into the sorter.
     """
     options = {}
     remainingArgs = []
@@ -105,7 +208,7 @@ def parseArgs(sorter,args):
         if arg == '--help':
             usage()
             sys.exit()
-        if arg == '--test':
+        if arg == '-t' or arg == '--test':
             selfTest()
             sys.exit()
         if arg in sorter.flagToOptions.keys():
@@ -122,13 +225,13 @@ def parseArgs(sorter,args):
     if not sorter.setOptions(options):
         usage()
         sys.exit()
-    return options
 
 if __name__ == '__main__':
     sorter = DICOMSorter()
     try:
-        options = parseArgs(sorter,sys.argv[1:])
-        print(options)
+        parseArgs(sorter,sys.argv[1:])
+        if not sorter.renameFiles():
+            sys.exit(2)
         sys.exit()
     except KeyboardInterrupt, e: # Ctrl-C
         raise e
