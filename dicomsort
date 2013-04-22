@@ -32,29 +32,45 @@ class DICOMSorter(object):
     according to a given set of options.
     """
 
-    defaultOptions = {
-            'sourceDir': None,
-            'targetPattern': None,
-            'compressTargets': False,
-            'deleteSource': False,
-            'forceDeleteSource': False,
-            'verbose': False,
-            }
 
-    flagToOptions = {
-            '-v': 'verbose',
-            '--verbose': 'verbose',
-            '-z': 'compressTargets',
-            '--compressTargets': 'compressTargets',
-            '-d': 'deleteSource',
-            '--deleteSource': 'deleteSource',
-            '-f': 'forceDeleteSource',
-            '--forceDelete': 'forceDeleteSource',
-            }
+    def __init__(self):
 
-    def __init__(self,options={}):
+        self.flagToOptions = {
+                '-v': 'verbose',
+                '--verbose': 'verbose',
+                '-z': 'compressTargets',
+                '--compressTargets': 'compressTargets',
+                '-d': 'deleteSource',
+                '--deleteSource': 'deleteSource',
+                '-f': 'forceDeleteSource',
+                '--forceDelete': 'forceDeleteSource',
+                }
+
+        self.defaultOptions = {
+                'sourceDir': None,
+                'targetPattern': None,
+                'compressTargets': False,
+                'deleteSource': False,
+                'forceDeleteSource': False,
+                'verbose': False,
+                }
+
+        self.requiredOptions = [ 'sourceDir', 'targetPattern', ]
+
+
+
+    def setOptions(self,options):
+        """Set the member variable options based on passed dictionary,
+        complaining if require options are missing, and filling in
+        optional options with default values if not specified"""
+        for option in self.requiredOptions:
+            if not options[option]:
+                return False
+        for option in self.defaultOptions:
+            if option not in options:
+                options[option] = self.defaultOptions[option]
         self.options = options
-
+        return True
 
 
 # {{{ main, test, and arg parse
@@ -76,24 +92,43 @@ def usage():
     print("\n  sorted/JohnDoe/2013-40-18/FLAIR-2.dcm")
 
 def selfTest():
+    print('run a self test here')
     pass
+
+def parseArgs(sorter,args):
+    """Parse the args into an options dictionary
+    """
+    options = {}
+    remainingArgs = []
+    while args != []:
+        arg = args.pop(0)
+        if arg == '--help':
+            usage()
+            sys.exit()
+        if arg == '--test':
+            selfTest()
+            sys.exit()
+        if arg in sorter.flagToOptions.keys():
+            options[sorter.flagToOptions[arg]] = True
+        elif arg.startswith('-'):
+            usage()
+            sys.exit(1)
+        else:
+            remainingArgs.append(arg)
+    if len(remainingArgs) != 2:
+        usage()
+        sys.exit(1)
+    options['sourceDir'], options['targetPattern'] = remainingArgs
+    if not sorter.setOptions(options):
+        usage()
+        sys.exit()
+    return options
 
 if __name__ == '__main__':
     sorter = DICOMSorter()
     try:
-        remainingArgs = []
-        options = {}
-        argList = sys.argv[1:]
-        while argList != []:
-            arg = argList.pop(0)
-            if arg == '--help':
-                usage()
-                sys.exit()
-            if arg in sorter.flagToOptions.keys():
-                options[sorter.flagToOptions[arg]] = True
-            else:
-                remainingArgs.append(arg)
-        print(remainingArgs)
+        options = parseArgs(sorter,sys.argv[1:])
+        print(options)
         sys.exit()
     except KeyboardInterrupt, e: # Ctrl-C
         raise e
