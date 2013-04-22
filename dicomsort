@@ -1,0 +1,111 @@
+#!/usr/bin/env python
+"""
+    https://github.com/pieper/dicomsort
+
+    Sorts directories containing dicom files into directories
+    with human-readable names for easy organization and manipulation.
+
+    See --help for options
+
+    Steve Pieper pieper@isomics.com
+
+    Not free software - this software is copyright Isomics, Inc. and is confidential.
+"""
+
+
+# {{{ packages and logging utilities
+
+# standard python includes
+import sys, os, traceback
+import shutil
+import time
+
+# special public packages
+import dicom
+from dicom.filereader import InvalidDicomError
+
+# }}}
+
+class DICOMSorter(object):
+    """Implements the logic for sorting dicom files from
+    a source directory into a target directory tree
+    according to a given set of options.
+    """
+
+    defaultOptions = {
+            'sourceDir': None,
+            'targetPattern': None,
+            'compressTargets': False,
+            'deleteSource': False,
+            'forceDeleteSource': False,
+            'verbose': False,
+            }
+
+    flagToOptions = {
+            '-v': 'verbose',
+            '--verbose': 'verbose',
+            '-z': 'compressTargets',
+            '--compressTargets': 'compressTargets',
+            '-d': 'deleteSource',
+            '--deleteSource': 'deleteSource',
+            '-f': 'forceDeleteSource',
+            '--forceDelete': 'forceDeleteSource',
+            }
+
+    def __init__(self,options={}):
+        self.options = options
+
+
+
+# {{{ main, test, and arg parse
+
+def usage():
+    print("dicomsort [options...] sourceDir targetDir/<patterns>")
+    print("\n where [options...] can be:")
+    print("    [-z,--compressTargets] - create a .zip file in the target directory")
+    print("    [-d,--deleteSource] - remove source files/directories after sorting")
+    print("    [-f,--forceDelete] - remove source without confirmation")
+    print("    [-v,--verbose] - print diagnostics while processing")
+    print("    [-t,--test] - run the built in self test (requires internet)")
+    print("    [--help] - print this message")
+    print("\n <patterns...> is a string defining the output file and directory")
+    print("names based on the dicom tags in the file.")
+    print("\n Examples:")
+    print("\n  dicomsort data sorted/%PatientName/%StudyDate/%SeriesDescription-%InstanceUID.dcm")
+    print("\n could create a folder structure like:")
+    print("\n  sorted/JohnDoe/2013-40-18/FLAIR-2.dcm")
+
+def selfTest():
+    pass
+
+if __name__ == '__main__':
+    sorter = DICOMSorter()
+    try:
+        remainingArgs = []
+        options = {}
+        argList = sys.argv[1:]
+        while argList != []:
+            arg = argList.pop(0)
+            if arg == '--help':
+                usage()
+                sys.exit()
+            if arg in sorter.flagToOptions.keys():
+                options[sorter.flagToOptions[arg]] = True
+            else:
+                remainingArgs.append(arg)
+        print(remainingArgs)
+        sys.exit()
+    except KeyboardInterrupt, e: # Ctrl-C
+        raise e
+    except SystemExit, e: # sys.exit()
+        raise e
+    except Exception, e:
+        print ('ERROR, UNEXPECTED EXCEPTION')
+        print (str(e))
+        traceback.print_exc()
+        os._exit(1)
+
+# }}}
+
+# vim:set sr et ts=4 sw=4 ft=python fenc=utf-8: // See Vim, :help 'modeline
+# vim: foldmethod=marker
