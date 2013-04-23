@@ -119,7 +119,8 @@ class DICOMSorter(object):
                     c = p[i]
                     i += 1
                     if not c.isalpha() or i >= end:
-                        fmt += ")s" + c
+                        fmt += ")s"
+                        i -= 1
                         break
                     else:
                         fmt += c
@@ -257,7 +258,7 @@ def selfTest():
 
     # now run the tests on the downloaded data
     targetDir = os.path.join(tempfile.tempdir, 'dicomsort-output')
-    targetPattern = targetDir + '/%PatientName/%StudyDesciption/%InstanceNumber.dcm'
+    targetPattern = targetDir + '/%PatientName/%StudyDesciption/%SeriesDescription%InstanceNumber.dcm'
     sorter = DICOMSorter()
     options = {
             'sourceDir': dataDir, 'targetPattern': targetPattern,
