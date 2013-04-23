@@ -77,7 +77,7 @@ class DICOMSorter(object):
     def safeFileName(self,fileName):
         """Remove any potentially dangerous or confusing characters from
         the file name by mapping them to reasonable subsitutes"""
-        underscores = r"""+`~!@#$%^&*(){}[]/=\|<>,.":'"""
+        underscores = r"""+`~!@#$%^&*(){}[]/=\|<>,.":' """
         safeName = ""
         for c in fileName:
             if c in underscores:
