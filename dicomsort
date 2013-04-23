@@ -74,6 +74,50 @@ class DICOMSorter(object):
         self.options = options
         return True
 
+    def safeFileName(self,fileName):
+        """Remove any potentially dangerous or confusing characters from
+        the file name by mapping them to reasonable subsitutes"""
+        underscores = r"""+`~!@#$%^&*(){}[]/=\|<>,.":'"""
+        safeName = ""
+        for c in fileName:
+            if c in underscores:
+                c = "_"
+            safeName += c
+        return safeName
+
+    def pathFromPattern(self,ds):
+        """Given a dicom dataset, use the targetPattern option
+        to define a file path"""
+        replacements = {}
+        keys = []
+        fmt = ""
+        p = self.options['targetPattern']
+        end = len(p)
+        i = 0
+        while i < end:
+            c = p[i]
+            if c == "%":
+                fmt += "%("
+                i += 1
+                key = ""
+                while True:
+                    c = p[i]
+                    i += 1
+                    if not c.isalpha() or i >= end:
+                        fmt += ")" + c
+                        break
+                    else:
+                        fmt += c
+                        key += c
+                keys.append(key)
+            else:
+                fmt += c
+                i += 1
+        print("p", p)
+        print("format", fmt)
+        print("keys", keys)
+
+
     def renameFiles(self):
         """Perform the sorting operation by sequentially renaming all
         the files in the source directory and all it's children
@@ -89,11 +133,18 @@ class DICOMSorter(object):
                     self.filesRenamed += 1
                 else:
                     self.filesSkipped += 1
+        if self.options['verbose']:
+            print("Renamed %d, skipped %d" % (self.filesRenamed, self.filesSkipped))
 
     def renameFile(self,file):
         """Rename a single file according to the current options.
         Return true on success"""
-        pass
+        try:
+            ds = dicom.read_file(file)
+        except InvalidDicomError:
+            return False
+        print(self.safeFileName(ds.PatientsName))
+        return True
 
 # DICOMSorter }}}
 
@@ -164,6 +215,10 @@ def selfTest():
     - sort it using various options
     - confirm correct results
     """
+
+    # test path from pattern
+
+
     # perform the download
     print('Downloading...')
     testDataURL = "https://s3.amazonaws.com/ec2.isomics.com/dicomsort-testdata.zip"
@@ -195,6 +250,10 @@ def selfTest():
             'sourceDir': dataDir, 'targetPattern': targetPattern,
             'verbose': True}
     sorter.setOptions(options)
+
+    sorter.pathFromPattern("")
+
+    return
     sorter.renameFiles()
 
 
