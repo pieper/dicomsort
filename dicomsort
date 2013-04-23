@@ -85,10 +85,25 @@ class DICOMSorter(object):
             safeName += c
         return safeName
 
-    def pathFromPattern(self,ds):
+    def pathFromDatasetPattern(self,ds):
         """Given a dicom dataset, use the targetPattern option
         to define a file path"""
         replacements = {}
+        fmt, keys = self.formatFromPattern()
+        for key in keys:
+            if hasattr(ds,key):
+                value = ds.__getattr__(key)
+            else:
+                value = ""
+            if value == "":
+                value = "Unknown%s" % key
+            replacements[key] = self.safeFileName(str(value))
+        print(fmt,replacements)
+        return fmt % replacements
+
+    def formatFromPattern(self):
+        """Given a dicom dataset, use the targetPattern option
+        to define a file path"""
         keys = []
         fmt = ""
         p = self.options['targetPattern']
@@ -104,7 +119,7 @@ class DICOMSorter(object):
                     c = p[i]
                     i += 1
                     if not c.isalpha() or i >= end:
-                        fmt += ")" + c
+                        fmt += ")s" + c
                         break
                     else:
                         fmt += c
@@ -113,10 +128,7 @@ class DICOMSorter(object):
             else:
                 fmt += c
                 i += 1
-        print("p", p)
-        print("format", fmt)
-        print("keys", keys)
-
+        return(fmt, keys)
 
     def renameFiles(self):
         """Perform the sorting operation by sequentially renaming all
@@ -140,10 +152,11 @@ class DICOMSorter(object):
         """Rename a single file according to the current options.
         Return true on success"""
         try:
-            ds = dicom.read_file(file)
+            ds = dicom.read_file(file,stop_before_pixels=True)
         except InvalidDicomError:
             return False
-        print(self.safeFileName(ds.PatientsName))
+        path = self.pathFromDatasetPattern(ds)
+        print(path)
         return True
 
 # DICOMSorter }}}
@@ -251,9 +264,6 @@ def selfTest():
             'verbose': True}
     sorter.setOptions(options)
 
-    sorter.pathFromPattern("")
-
-    return
     sorter.renameFiles()
 
 
