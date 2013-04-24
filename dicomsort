@@ -48,6 +48,8 @@ class DICOMSorter(object):
                 '--deleteSource': 'deleteSource',
                 '-f': 'forceDeleteSource',
                 '--forceDelete': 'forceDeleteSource',
+                '-t': 'test',
+                '--test': 'test',
                 }
 
         self.defaultOptions = {
@@ -57,6 +59,7 @@ class DICOMSorter(object):
                 'deleteSource': False,
                 'forceDeleteSource': False,
                 'verbose': False,
+                'test': False,
                 }
 
         self.requiredOptions = [ 'sourceDir', 'targetPattern', ]
@@ -66,11 +69,17 @@ class DICOMSorter(object):
         complaining if require options are missing, and filling in
         optional options with default values if not specified"""
         for option in self.requiredOptions:
-            if not options[option]:
+            if not option in options:
                 return False
         for option in self.defaultOptions:
             if option not in options:
                 options[option] = self.defaultOptions[option]
+
+        if '%' not in options['targetPattern']:
+            # implement the default sort
+            pattern = "%PatientName-%Modality%StudyID-%StudyDescription-%StudyDate/%SeriesNumber_%SeriesDescription-%InstanceNumber.dcm"
+            options['targetPattern'] = os.path.join(options['targetPattern'], pattern)
+
         self.options = options
         return True
 
@@ -98,7 +107,6 @@ class DICOMSorter(object):
             if value == "":
                 value = "Unknown%s" % key
             replacements[key] = self.safeFileName(str(value))
-        print(fmt,replacements)
         return fmt % replacements
 
     def formatFromPattern(self):
@@ -157,7 +165,18 @@ class DICOMSorter(object):
         except InvalidDicomError:
             return False
         path = self.pathFromDatasetPattern(ds)
-        print(path)
+        if os.path.exists(path):
+            print('Source file: %s' % file)
+            print('Target path: %s' % path)
+            print('Target path already exists - pattern is probably not unique')
+            print('Aborting to avoid data loss.')
+            sys.exit(-3)
+        targetDir = os.path.dirname(path)
+        if not os.path.exists(targetDir):
+            os.makedirs(targetDir)
+        shutil.copyfile(file,path)
+        if self.options['verbose']:
+            print("Copied %s, to %s" % (file,path))
         return True
 
 # DICOMSorter }}}
@@ -220,18 +239,17 @@ def usage():
     print("\n  dicomsort data sorted/%PatientName/%StudyDate/%SeriesDescription-%InstanceUID.dcm")
     print("\n could create a folder structure like:")
     print("\n  sorted/JohnDoe/2013-40-18/FLAIR-2.dcm")
+    print("\nIf patterns are not specified, the following default is used:")
+    print("\n %PatientName-%Modality%StudyID-%StudyDescription-%StudyDate/%SeriesNumber_%SeriesDescription-%InstanceNumber.dcm")
 
 
-def selfTest():
+def selfTest(sorter):
     """Run a self test of the DICOMSorter
     - download a zipfile of test dicom data
     - extract it in a temp location
     - sort it using various options
     - confirm correct results
     """
-
-    # test path from pattern
-
 
     # perform the download
     print('Downloading...')
@@ -258,14 +276,16 @@ def selfTest():
 
     # now run the tests on the downloaded data
     targetDir = os.path.join(tempfile.tempdir, 'dicomsort-output')
-    targetPattern = targetDir + '/%PatientName/%StudyDesciption/%SeriesDescription%InstanceNumber.dcm'
-    sorter = DICOMSorter()
-    options = {
-            'sourceDir': dataDir, 'targetPattern': targetPattern,
-            'verbose': True}
+    if os.path.exists(targetDir):
+        shutil.rmtree(targetDir)
+    targetPattern = targetDir + '/%PatientName/%StudyDesciption-%StudyDate/%SeriesDescription-%SeriesNumber-%InstanceNumber.dcm'
+    options = sorter.options
+    options['sourceDir'] = dataDir
+    options['targetPattern'] = targetPattern
     sorter.setOptions(options)
-
     sorter.renameFiles()
+    print('\nSelf-Test Passed!')
+    sys.exit(0)
 
 
 def parseArgs(sorter,args):
@@ -278,9 +298,6 @@ def parseArgs(sorter,args):
         if arg == '--help':
             usage()
             sys.exit()
-        if arg == '-t' or arg == '--test':
-            selfTest()
-            sys.exit()
         if arg in sorter.flagToOptions.keys():
             options[sorter.flagToOptions[arg]] = True
         elif arg.startswith('-'):
@@ -288,6 +305,8 @@ def parseArgs(sorter,args):
             sys.exit(1)
         else:
             remainingArgs.append(arg)
+    if 'test' in options:
+        remainingArgs = ["",""]
     if len(remainingArgs) != 2:
         usage()
         sys.exit(1)
@@ -300,6 +319,8 @@ if __name__ == '__main__':
     sorter = DICOMSorter()
     try:
         parseArgs(sorter,sys.argv[1:])
+        if sorter.options['test']:
+            selfTest(sorter)
         if not sorter.renameFiles():
             sys.exit(2)
         sys.exit()
