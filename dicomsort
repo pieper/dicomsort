@@ -35,6 +35,9 @@ class DICOMSorter(object):
     """Implements the logic for sorting dicom files from
     a source directory into a target directory tree
     according to a given set of options.
+    This is meant to be somewhat independent of the command line
+    wrapper so that it could be used as a library in other
+    code if needed.
     """
 
     def __init__(self):
@@ -46,8 +49,8 @@ class DICOMSorter(object):
                 '--compressTargets': 'compressTargets',
                 '-d': 'deleteSource',
                 '--deleteSource': 'deleteSource',
-                '-f': 'forceDeleteSource',
-                '--forceDelete': 'forceDeleteSource',
+                '-f': 'forceDelete',
+                '--forceDelete': 'forceDelete',
                 '-t': 'test',
                 '--test': 'test',
                 }
@@ -57,7 +60,7 @@ class DICOMSorter(object):
                 'targetPattern': None,
                 'compressTargets': False,
                 'deleteSource': False,
-                'forceDeleteSource': False,
+                'forceDelete': False,
                 'verbose': False,
                 'test': False,
                 }
@@ -156,6 +159,7 @@ class DICOMSorter(object):
                     self.filesSkipped += 1
         if self.options['verbose']:
             print("Renamed %d, skipped %d" % (self.filesRenamed, self.filesSkipped))
+        return True
 
     def renameFile(self,file):
         """Rename a single file according to the current options.
@@ -166,9 +170,9 @@ class DICOMSorter(object):
             return False
         path = self.pathFromDatasetPattern(ds)
         if os.path.exists(path):
-            print('Source file: %s' % file)
-            print('Target path: %s' % path)
-            print('Target path already exists - pattern is probably not unique')
+            print('\nSource file: %s' % file)
+            print('Target file: %s' % path)
+            print('\nTarget file already exists - pattern is probably not unique')
             print('Aborting to avoid data loss.')
             sys.exit(-3)
         targetDir = os.path.dirname(path)
@@ -285,8 +289,6 @@ def selfTest(sorter):
     sorter.setOptions(options)
     sorter.renameFiles()
     print('\nSelf-Test Passed!')
-    sys.exit(0)
-
 
 def parseArgs(sorter,args):
     """Parse the command line args into the sorter.
@@ -314,6 +316,20 @@ def parseArgs(sorter,args):
     if not sorter.setOptions(options):
         usage()
         sys.exit()
+    if not os.path.exists(options['sourceDir']):
+        print ("Source directory does not exist: %s" % options['sourceDir'])
+        sys.exit(1)
+
+
+def confirmDelete(sorter):
+    if sorter.options['forceDelete']:
+        return True
+    print("Source directory is: %s" % sorter.options['sourceDir'])
+    response = raw_input ('Delete source directory? [y/N] ')
+    if response == 'y' or response == 'yes':
+        return True
+    return False
+
 
 if __name__ == '__main__':
     sorter = DICOMSorter()
@@ -321,8 +337,16 @@ if __name__ == '__main__':
         parseArgs(sorter,sys.argv[1:])
         if sorter.options['test']:
             selfTest(sorter)
+            exit(0)
         if not sorter.renameFiles():
             sys.exit(2)
+        print("Files sorted")
+        if sorter.options['deleteSource']:
+            if confirmDelete(sorter):
+                shutil.rmtree(sorter.options['sourceDir'])
+                print ('Source directory deleted')
+            else:
+                print ('Source directory not deleted')
         sys.exit()
     except KeyboardInterrupt, e: # Ctrl-C
         raise e
