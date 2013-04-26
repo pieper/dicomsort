@@ -67,6 +67,10 @@ class DICOMSorter(object):
 
         self.requiredOptions = [ 'sourceDir', 'targetPattern', ]
 
+        # each dict key is a directory path used while sorting
+        # values are lists of new filenames within directory
+        self.renamedFiles = {}
+
     def setOptions(self,options):
         """Set the member variable options based on passed dictionary,
         complaining if require options are missing, and filling in
@@ -164,10 +168,12 @@ class DICOMSorter(object):
     def renameFile(self,file):
         """Rename a single file according to the current options.
         Return true on success"""
+        # check for dicom file
         try:
             ds = dicom.read_file(file,stop_before_pixels=True)
         except InvalidDicomError:
             return False
+        # check for valid path - abort program to avoid overwrite
         path = self.pathFromDatasetPattern(ds)
         if os.path.exists(path):
             print('\nSource file: %s' % file)
@@ -175,13 +181,50 @@ class DICOMSorter(object):
             print('\nTarget file already exists - pattern is probably not unique')
             print('Aborting to avoid data loss.')
             sys.exit(-3)
+        # make new directories to hold file if needed
         targetDir = os.path.dirname(path)
+        targetFileName = os.path.basename(path)
         if not os.path.exists(targetDir):
             os.makedirs(targetDir)
         shutil.copyfile(file,path)
         if self.options['verbose']:
             print("Copied %s, to %s" % (file,path))
+        # keep track of files and new directories
+        if targetDir in self.renamedFiles:
+            self.renamedFiles[targetDir].append(targetFileName)
+        else:
+            self.renamedFiles[targetDir] = [targetFileName,]
         return True
+
+    def zipRenamedFiles(self):
+        """For each directory that had files added while sorting,
+        create a zipfile containing the newly sorted files
+        that were added to that directory.
+        """
+        for targetDir in self.renamedFiles:
+            dirBase = os.path.basename(targetDir)
+            dirDirname = os.path.dirname(targetDir)
+            zipFilePath = dirDirname + '/' + dirBase + ".zip"
+            if self.options['verbose']:
+                print ('Creating %s' % zipFilePath)
+            zfp = zipfile.ZipFile(zipFilePath, "w")
+            for name in self.renamedFiles[targetDir]:
+                zipPath = dirBase + '/' + name
+                filePath = targetDir + '/' + name
+                if self.options['verbose']:
+                    print ('Adding %s' % zipPath)
+                zfp.write(filePath, zipPath, zipfile.ZIP_DEFLATED)
+                os.remove(filePath)
+            if self.options['verbose']:
+                print ('Finished %s' % zipFilePath)
+            zfp.close()
+            # remove the stub directory - it will only succeed if it is
+            # empty, meaning that all the files were moved to the zipfile
+            try:
+                os.rmdir(targetDir)
+            except OSError:
+                pass
+
 
 # DICOMSorter }}}
 
@@ -341,6 +384,9 @@ if __name__ == '__main__':
         if not sorter.renameFiles():
             sys.exit(2)
         print("Files sorted")
+        if sorter.options['compressTargets']:
+            sorter.zipRenamedFiles()
+            print('Target files compressed')
         if sorter.options['deleteSource']:
             if confirmDelete(sorter):
                 shutil.rmtree(sorter.options['sourceDir'])
