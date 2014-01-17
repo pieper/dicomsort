@@ -54,6 +54,8 @@ class DICOMSorter(object):
                 '--deleteSource': 'deleteSource',
                 '-f': 'forceDelete',
                 '--forceDelete': 'forceDelete',
+                '-k': 'keepGoing',
+                '--keepGoing': 'keepGoing',
                 '-t': 'test',
                 '--test': 'test',
                 }
@@ -64,6 +66,7 @@ class DICOMSorter(object):
                 'compressTargets': False,
                 'deleteSource': False,
                 'forceDelete': False,
+                'keepGoing': False,
                 'verbose': False,
                 'test': False,
                 }
@@ -182,8 +185,9 @@ class DICOMSorter(object):
             print('\nSource file: %s' % file)
             print('Target file: %s' % path)
             print('\nTarget file already exists - pattern is probably not unique')
-            print('Aborting to avoid data loss.')
-            sys.exit(-3)
+            if not self.options['keepGoing']:
+                print('Aborting to avoid data loss.')
+                sys.exit(-3)
         # make new directories to hold file if needed
         targetDir = os.path.dirname(path)
         targetFileName = os.path.basename(path)
@@ -280,6 +284,7 @@ def usage():
     print("    [-z,--compressTargets] - create a .zip file in the target directory")
     print("    [-d,--deleteSource] - remove source files/directories after sorting")
     print("    [-f,--forceDelete] - remove source without confirmation")
+    print("    [-k,--keepGoing] - report but ignore dupicate target files")
     print("    [-v,--verbose] - print diagnostics while processing")
     print("    [-t,--test] - run the built in self test (requires internet)")
     print("    [--help] - print this message")
