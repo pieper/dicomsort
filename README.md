@@ -54,6 +54,7 @@ If patterns are not specified, the following default is used:
  ```
 
 Requires
-=======-
+========
 Python 2.x
+
 pydicom
