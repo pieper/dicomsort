@@ -8,8 +8,11 @@
     See --help for options
 
     Steve Pieper pieper@isomics.com
+    Stefan Baumann stefan.baumann@novartis.com
 
-    Not free software - this software is copyright Isomics, Inc. and is confidential.
+    This software is released under the terms of the
+    3D Slicer License version 1.0 (December 20, 2005).
+    See the License.txt file or http://slicer.org for full text.
 """
 
 
