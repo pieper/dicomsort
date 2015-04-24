@@ -179,6 +179,9 @@ class DICOMSorter(object):
             ds = dicom.read_file(file,stop_before_pixels=True)
         except InvalidDicomError:
             return False
+        except KeyError:
+            # needed for issue with pydicom 0.9.9 and some dicomdir files
+            return False
         # check for valid path - abort program to avoid overwrite
         path = self.pathFromDatasetPattern(ds)
         if os.path.exists(path):
