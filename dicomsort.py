@@ -27,8 +27,9 @@ import urllib
 import zipfile
 
 # special public packages
-import dicom
-from dicom.filereader import InvalidDicomError
+import pydicom
+
+from pydicom.filereader import InvalidDicomError
 
 # }}}
 
@@ -58,6 +59,8 @@ class DICOMSorter(object):
                 '--keepGoing': 'keepGoing',
                 '-t': 'test',
                 '--test': 'test',
+                '-u': 'unsafe',
+                '--unsafe': 'unsafe'
                 }
 
         self.defaultOptions = {
@@ -69,6 +72,7 @@ class DICOMSorter(object):
                 'keepGoing': False,
                 'verbose': False,
                 'test': False,
+                'unsafe': False
                 }
 
         self.requiredOptions = [ 'sourceDir', 'targetPattern', ]
@@ -107,7 +111,7 @@ class DICOMSorter(object):
             safeName += c
         return safeName
 
-    def pathFromDatasetPattern(self,ds):
+    def pathFromDatasetPattern(self,ds,safe=True):
         """Given a dicom dataset, use the targetPattern option
         to define a file path"""
         replacements = {}
@@ -119,7 +123,10 @@ class DICOMSorter(object):
                 value = ""
             if value == "":
                 value = "Unknown%s" % key
-            replacements[key] = self.safeFileName(str(value))
+            if safe:
+              replacements[key] = self.safeFileName(str(value))
+            else:
+              replacements[key] = str(value)
         return fmt % replacements
 
     def formatFromPattern(self):
@@ -176,14 +183,14 @@ class DICOMSorter(object):
         Return true on success"""
         # check for dicom file
         try:
-            ds = dicom.read_file(file,stop_before_pixels=True)
+            ds = pydicom.read_file(file,stop_before_pixels=True)
         except InvalidDicomError:
             return False
         except KeyError:
             # needed for issue with pydicom 0.9.9 and some dicomdir files
             return False
         # check for valid path - abort program to avoid overwrite
-        path = self.pathFromDatasetPattern(ds)
+        path = self.pathFromDatasetPattern(ds, safe=(not sorter.options['unsafe']))
         if os.path.exists(path):
             print('\nSource file: %s' % file)
             print('Target file: %s' % path)
@@ -290,6 +297,7 @@ def usage():
     print("    [-k,--keepGoing] - report but ignore dupicate target files")
     print("    [-v,--verbose] - print diagnostics while processing")
     print("    [-t,--test] - run the built in self test (requires internet)")
+    print("    [-u,--unsafe] - do not replace unsafe characters with '_' in the path")
     print("    [--help] - print this message")
     print("\n <patterns...> is a string defining the output file and directory")
     print("names based on the dicom tags in the file.")
