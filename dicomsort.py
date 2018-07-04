@@ -307,7 +307,7 @@ def usage():
     print("\n <patterns...> is a string defining the output file and directory")
     print("names based on the dicom tags in the file.")
     print("\n Examples:")
-    print("\n  dicomsort data sorted/%PatientName/%StudyDate/%SeriesDescription-%SOPInstanceUID.dcm")
+    print("\n  dicomsort data sorted/%PatientName/%StudyDate/%SeriesDescription-%InstanceNumber.dcm")
     print("\n could create a folder structure like:")
     print("\n  sorted/JohnDoe/2013-40-18/FLAIR-2.dcm")
     print("\nIf patterns are not specified, the following default is used:")
