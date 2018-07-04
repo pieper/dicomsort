@@ -27,9 +27,14 @@ import urllib
 import zipfile
 
 # special public packages
-import pydicom
+try:
+    import dicom
+    from dicom.filereader import InvalidDicomError
+except ImportError:
+    import pydicom
+    from pydicom.filereader import InvalidDicomError
+    dicom = pydicom
 
-from pydicom.filereader import InvalidDicomError
 
 # }}}
 
@@ -183,7 +188,7 @@ class DICOMSorter(object):
         Return true on success"""
         # check for dicom file
         try:
-            ds = pydicom.read_file(file,stop_before_pixels=True)
+            ds = dicom.read_file(file,stop_before_pixels=True)
         except InvalidDicomError:
             return False
         except KeyError:
