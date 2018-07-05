@@ -170,15 +170,36 @@ class DICOMSorter(object):
         """
         self.filesRenamed = 0
         self.filesSkipped = 0
+
+        if self.options['verbose']:
+            print("Preparing the list of files ...")
+
+        allFiles = []
         for root, subFolders, files in os.walk(self.options['sourceDir']):
             for file in files:
-                if self.options['verbose']:
-                    print("Considering file %s" % file)
                 file = os.path.join(root,file)
-                if self.renameFile(file):
-                    self.filesRenamed += 1
-                else:
-                    self.filesSkipped += 1
+                allFiles.append(file)
+
+        if self.options['verbose']:
+            print("Sorting files ...")
+
+        try:
+            from tqdm import tqdm
+            pbar = tqdm(total=len(allFiles))
+        except ImportError:
+            pbar = None
+        for file in allFiles:
+            if self.options['verbose']:
+                print("Considering file %s" % file)
+            if self.renameFile(file):
+                self.filesRenamed += 1
+            else:
+                self.filesSkipped += 1
+            if pbar is not None:
+                pbar.update(1)
+        if pbar is not None:
+            pbar.close()
+
         if self.options['verbose']:
             print("Renamed %d, skipped %d" % (self.filesRenamed, self.filesSkipped))
         return True
