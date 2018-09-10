@@ -35,6 +35,7 @@ dicomsort [options...] sourceDir targetDir/<patterns>
     [-k,--keepGoing] - report but ignore dupicate target files
     [-v,--verbose] - print diagnostics while processing
     [-t,--test] - run the built in self test (requires internet)
+    [-u,--unsafe] - do not replace unsafe characters with '_' in the path
     [--help] - print this message
 
  <patterns...> is a string defining the output file and directory
@@ -42,7 +43,7 @@ names based on the dicom tags in the file.
 
  Examples:
 
-  dicomsort data sorted/%PatientName/%StudyDate/%SeriesDescription-%InstanceUID.dcm
+  dicomsort data sorted/%PatientName/%StudyDate/%SeriesDescription-%InstanceNumber.dcm
 
  could create a folder structure like:
 
@@ -51,7 +52,7 @@ names based on the dicom tags in the file.
 If patterns are not specified, the following default is used:
 
  %PatientName-%Modality%StudyID-%StudyDescription-%StudyDate/%SeriesNumber_%SeriesDescription-%InstanceNumber.dcm
- ```
+```
 
 Requires
 ========
