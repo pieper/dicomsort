@@ -56,6 +56,6 @@ If patterns are not specified, the following default is used:
 
 Requires
 ========
-Python 2.x
+Python 2.x or 3.x
 
 pydicom
