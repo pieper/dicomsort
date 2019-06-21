@@ -65,7 +65,9 @@ class DICOMSorter(object):
                 '-t': 'test',
                 '--test': 'test',
                 '-u': 'unsafe',
-                '--unsafe': 'unsafe'
+                '--unsafe': 'unsafe',
+                '-r': 'truncateTime',
+                '--truncateTime': 'truncateTime'
                 }
 
         self.defaultOptions = {
@@ -77,7 +79,8 @@ class DICOMSorter(object):
                 'keepGoing': False,
                 'verbose': False,
                 'test': False,
-                'unsafe': False
+                'unsafe': False,
+                'truncateTime': False
                 }
 
         self.requiredOptions = [ 'sourceDir', 'targetPattern', ]
@@ -128,6 +131,9 @@ class DICOMSorter(object):
                 value = ""
             if value == "":
                 value = "Unknown%s" % key
+            if self.options['truncateTime']:
+              if key.endswith("Time") and str(value)[str(value).find('.')+1:] == '000000':
+                value = str(value)[:str(value).find('.')]
             if safe:
               replacements[key] = self.safeFileName(str(value))
             else:
