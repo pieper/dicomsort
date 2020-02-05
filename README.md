@@ -34,12 +34,15 @@ dicomsort [options...] sourceDir targetDir/<patterns>
     [-f,--forceDelete] - remove source without confirmation
     [-k,--keepGoing] - report but ignore dupicate target files
     [-v,--verbose] - print diagnostics while processing
+    [-s,--symlink] - create a symlink to dicom files in sourceDir instead of copying them
     [-t,--test] - run the built in self test (requires internet)
     [-u,--unsafe] - do not replace unsafe characters with '_' in the path
     [--help] - print this message
 
- <patterns...> is a string defining the output file and directory
-names based on the dicom tags in the file.
+ where sourceDir is directory to be scanned or "" (null string) to read file list from stdin
+
+ where targetDir/<patterns...> is a string defining the output file and directory
+       names based on the dicom tags in the file.
 
  Examples:
 
