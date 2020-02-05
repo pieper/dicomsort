@@ -189,10 +189,16 @@ class DICOMSorter(object):
             print("Preparing the list of files ...")
 
         allFiles = []
-        for root, subFolders, files in os.walk(self.options['sourceDir']):
-            for file in files:
-                file = os.path.join(root,file)
-                allFiles.append(file)
+        if self.options['sourceDir'] == "":
+            for line in sys.stdin:
+                line = line.strip()
+                if os.path.isfile(line):
+                    allFiles.append(line.strip())
+        else:
+            for root, subFolders, files in os.walk(self.options['sourceDir']):
+                for file in files:
+                    file = os.path.join(root,file)
+                    allFiles.append(file)
 
         if self.options['verbose']:
             print("Sorting files ...")
@@ -225,7 +231,7 @@ class DICOMSorter(object):
         try:
             ds = dicom.read_file(file,stop_before_pixels=True)
         except (IOError, os.error) as why:
-            print( "dicom.read_file() IO error on file $s, exception %s" % (file,str(why)) )
+            print( "dicom.read_file() IO error on file %s, exception %s" % (file,str(why)) )
             return False
         except InvalidDicomError:
             return False
@@ -358,8 +364,9 @@ def usage():
     print("    [-t,--test] - run the built in self test (requires internet)")
     print("    [-u,--unsafe] - do not replace unsafe characters with '_' in the path")
     print("    [--help] - print this message")
-    print("\n <patterns...> is a string defining the output file and directory")
-    print("names based on the dicom tags in the file.")
+    print("\n where sourceDir is directory to be scanned or \"\" (null string) to read file list from stdin")
+    print("\n where targetDir/<patterns...> is a string defining the output file and directory")
+    print("       names based on the dicom tags in the file.")
     print("\n Examples:")
     print("\n  dicomsort data sorted/%PatientName/%StudyDate/%SeriesDescription-%InstanceNumber.dcm")
     print("\n could create a folder structure like:")
@@ -437,7 +444,9 @@ def parseArgs(sorter,args):
     if not sorter.setOptions(options):
         usage()
         sys.exit()
-    if not os.path.exists(options['sourceDir']):
+    if options['sourceDir'] == "":
+        print ("Reading file list from stdin.")
+    elif not os.path.exists(options['sourceDir']):
         print ("Source directory does not exist: %s" % options['sourceDir'])
         sys.exit(1)
     if options['symlink'] and (options['compressTargets'] or options['deleteSource'] or options['forceDelete']):
