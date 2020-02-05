@@ -62,6 +62,8 @@ class DICOMSorter(object):
                 '--forceDelete': 'forceDelete',
                 '-k': 'keepGoing',
                 '--keepGoing': 'keepGoing',
+                '-s': 'symlink',
+                '--symlink': 'symlink',
                 '-t': 'test',
                 '--test': 'test',
                 '-u': 'unsafe',
@@ -78,6 +80,7 @@ class DICOMSorter(object):
                 'forceDelete': False,
                 'keepGoing': False,
                 'verbose': False,
+                'symlink': False,
                 'test': False,
                 'unsafe': False,
                 'truncateTime': False
@@ -135,7 +138,12 @@ class DICOMSorter(object):
               if key.endswith("Time") and str(value)[str(value).find('.')+1:] == '000000':
                 value = str(value)[:str(value).find('.')]
             if safe:
-              replacements[key] = self.safeFileName(str(value))
+              try:
+                replacements[key] = self.safeFileName(str(value))
+              except UnicodeEncodeError as why:
+                print('Encoding target path segment value failed. Exception: %s' % why)
+                value = "Unknown_%s_" % key
+                replacements[key] = self.safeFileName(str(value))
             else:
               replacements[key] = str(value)
         return fmt % replacements
@@ -216,11 +224,15 @@ class DICOMSorter(object):
         # check for dicom file
         try:
             ds = dicom.read_file(file,stop_before_pixels=True)
+        except (IOError, os.error) as why:
+            print( "dicom.read_file() IO error on file $s, exception %s" % (file,str(why)) )
+            return False
         except InvalidDicomError:
             return False
         except KeyError:
             # needed for issue with pydicom 0.9.9 and some dicomdir files
             return False
+
         # check for valid path - abort program to avoid overwrite
         path = self.pathFromDatasetPattern(ds, safe=(not sorter.options['unsafe']))
         if os.path.exists(path):
@@ -230,14 +242,28 @@ class DICOMSorter(object):
             if not self.options['keepGoing']:
                 print('Aborting to avoid data loss.')
                 sys.exit(-3)
+
         # make new directories to hold file if needed
         targetDir = os.path.dirname(path)
         targetFileName = os.path.basename(path)
         if not os.path.exists(targetDir):
             os.makedirs(targetDir)
-        shutil.copyfile(file,path)
-        if self.options['verbose']:
-            print("Copied %s, to %s" % (file,path))
+
+        try:
+            if self.options['symlink']:
+                os.symlink(file, path)
+                if self.options['verbose']:
+                    print("Symlinked %s, to %s" % (file,path))
+            else:
+                shutil.copyfile(file,path)
+                if self.options['verbose']:
+                    print("Copied %s, to %s" % (file,path))
+        except (IOError, os.error) as why:
+            print( "Dicom file copy/symlink IO error on output pathname >%s< Exception >%s<" % (path,str(why)) ) 
+            if self.options['deleteSource'] or self.options['forceDelete']:
+                print ("Halting execution on IO error because delteSource or forceDelete options could cause data loss.")
+                sys.exit(1)
+
         # keep track of files and new directories
         if targetDir in self.renamedFiles:
             self.renamedFiles[targetDir].append(targetFileName)
@@ -328,6 +354,7 @@ def usage():
     print("    [-f,--forceDelete] - remove source without confirmation")
     print("    [-k,--keepGoing] - report but ignore dupicate target files")
     print("    [-v,--verbose] - print diagnostics while processing")
+    print("    [-s,--symlink] - create a symlink to dicom files in sourceDir instead of copying them")
     print("    [-t,--test] - run the built in self test (requires internet)")
     print("    [-u,--unsafe] - do not replace unsafe characters with '_' in the path")
     print("    [--help] - print this message")
@@ -413,7 +440,9 @@ def parseArgs(sorter,args):
     if not os.path.exists(options['sourceDir']):
         print ("Source directory does not exist: %s" % options['sourceDir'])
         sys.exit(1)
-
+    if options['symlink'] and (options['compressTargets'] or options['deleteSource'] or options['forceDelete']):
+        print ("symlink option is not compatible with compressTargets, delteSource, or forceDelete options")
+        sys.exit(1)
 
 def confirmDelete(sorter):
     if sorter.options['forceDelete']:
