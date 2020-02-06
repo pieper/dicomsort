@@ -44,17 +44,25 @@ dicomsort [options...] sourceDir targetDir/<patterns>
  where targetDir/<patterns...> is a string defining the output file and directory
        names based on the dicom tags in the file.
 
- Examples:
+If patterns are not specified, the following default is used:
+ 
+ %PatientName-%Modality%StudyID-%StudyDescription-%StudyDate/%SeriesNumber_%SeriesDescription-%InstanceNumber.dcm
+
+Example 1:
 
   dicomsort data sorted/%PatientName/%StudyDate/%SeriesDescription-%InstanceNumber.dcm
 
- could create a folder structure like:
+  could create a folder structure like:
 
   sorted/JohnDoe/2013-40-18/FLAIR-2.dcm
 
-If patterns are not specified, the following default is used:
+Example 2:
 
- %PatientName-%Modality%StudyID-%StudyDescription-%StudyDate/%SeriesNumber_%SeriesDescription-%InstanceNumber.dcm
+ find DicomSourceDir/ | grep "IMA$" | dicomsort -s "" DicomTargetDir
+
+ would scan DicomSourceDir for file pathnames ending in IMA and create an
+ output directory DicomTargetDir. The folder structure will be created using
+ the default pattern with symbolic links to the source dicom data files.
 ```
 
 Requires
