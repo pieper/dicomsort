@@ -46,7 +46,7 @@ dicomsort [options...] sourceDir targetDir/<patterns>
 
 If patterns are not specified, the following default is used:
  
- %PatientName-%Modality%StudyID-%StudyDescription-%StudyDate/%SeriesNumber_%SeriesDescription-%InstanceNumber.dcm
+   %PatientName-%Modality%StudyID-%StudyDescription-%StudyDate/%SeriesNumber_%SeriesDescription-%InstanceNumber.dcm
 
 Example 1:
 
@@ -58,11 +58,11 @@ Example 1:
 
 Example 2:
 
- find DicomSourceDir/ | grep "IMA$" | dicomsort -s "" DicomTargetDir
+  find DicomSourceDir/ | grep "IMA$" | dicomsort -s "" DicomTargetDir
 
- would scan DicomSourceDir for file pathnames ending in IMA and create an
- output directory DicomTargetDir. The folder structure will be created using
- the default pattern with symbolic links to the source dicom data files.
+  would scan DicomSourceDir for file pathnames ending in IMA and create an
+  output directory DicomTargetDir. The folder structure will be created using
+  the default pattern with symbolic links to the source dicom data files.
 ```
 
 Requires
