@@ -42,11 +42,11 @@ dicomsort [options...] sourceDir targetDir/<patterns>
  where sourceDir is directory to be scanned or "" (null string) to read file list from stdin
 
  where targetDir/<patterns...> is a string defining the output file and directory
-       names based on the dicom tags in the file.
+ names based on the dicom tags in the file.
 
 If patterns are not specified, the following default is used:
  
-   %PatientName-%Modality%StudyID-%StudyDescription-%StudyDate/%SeriesNumber_%SeriesDescription-%InstanceNumber.dcm
+  %PatientName-%Modality%StudyID-%StudyDescription-%StudyDate/%SeriesNumber_%SeriesDescription-%InstanceNumber.dcm
 
 Example 1:
 
