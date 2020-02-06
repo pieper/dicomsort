@@ -353,27 +353,47 @@ class DownloadHelper(object):
 # {{{ main, test, and arg parse
 
 def usage():
-    print("dicomsort [options...] sourceDir targetDir/<patterns>")
-    print("\n where [options...] can be:")
-    print("    [-z,--compressTargets] - create a .zip file in the target directory")
-    print("    [-d,--deleteSource] - remove source files/directories after sorting")
-    print("    [-f,--forceDelete] - remove source without confirmation")
-    print("    [-k,--keepGoing] - report but ignore dupicate target files")
-    print("    [-v,--verbose] - print diagnostics while processing")
-    print("    [-s,--symlink] - create a symlink to dicom files in sourceDir instead of copying them")
-    print("    [-t,--test] - run the built in self test (requires internet)")
-    print("    [-u,--unsafe] - do not replace unsafe characters with '_' in the path")
-    print("    [--help] - print this message")
-    print("\n where sourceDir is directory to be scanned or \"\" (null string) to read file list from stdin")
-    print("\n where targetDir/<patterns...> is a string defining the output file and directory")
-    print("       names based on the dicom tags in the file.")
-    print("\n Examples:")
-    print("\n  dicomsort data sorted/%PatientName/%StudyDate/%SeriesDescription-%InstanceNumber.dcm")
-    print("\n could create a folder structure like:")
-    print("\n  sorted/JohnDoe/2013-40-18/FLAIR-2.dcm")
-    print("\nIf patterns are not specified, the following default is used:")
-    print("\n %PatientName-%Modality%StudyID-%StudyDescription-%StudyDate/%SeriesNumber_%SeriesDescription-%InstanceNumber.dcm")
+    s = """
+% dicomsort.py --help
+dicomsort [options...] sourceDir targetDir/<patterns>
 
+ where [options...] can be:
+    [-z,--compressTargets] - create a .zip file in the target directory
+    [-d,--deleteSource] - remove source files/directories after sorting
+    [-f,--forceDelete] - remove source without confirmation
+    [-k,--keepGoing] - report but ignore dupicate target files
+    [-v,--verbose] - print diagnostics while processing
+    [-s,--symlink] - create a symlink to dicom files in sourceDir instead of copying them
+    [-t,--test] - run the built in self test (requires internet)
+    [-u,--unsafe] - do not replace unsafe characters with '_' in the path
+    [--help] - print this message
+
+ where sourceDir is directory to be scanned or "" (null string) to read file list from stdin
+
+ where targetDir/<patterns...> is a string defining the output file and directory
+ names based on the dicom tags in the file.
+
+If patterns are not specified, the following default is used:
+
+  %PatientName-%Modality%StudyID-%StudyDescription-%StudyDate/%SeriesNumber_%SeriesDescription-%InstanceNumber.dcm
+
+Example 1:
+
+  dicomsort data sorted/%PatientName/%StudyDate/%SeriesDescription-%InstanceNumber.dcm
+
+  could create a folder structure like:
+
+  sorted/JohnDoe/2013-40-18/FLAIR-2.dcm
+
+Example 2:
+
+  find DicomSourceDir/ | grep "IMA$" | dicomsort -s "" DicomTargetDir
+
+  would scan DicomSourceDir for file pathnames ending in IMA and create an
+  output directory DicomTargetDir. The folder structure will be created using
+  the default pattern with symbolic links to the source dicom data files.
+"""
+    print(s)
 
 def selfTest(sorter):
     """Run a self test of the DICOMSorter
