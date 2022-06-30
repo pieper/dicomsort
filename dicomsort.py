@@ -477,7 +477,7 @@ def confirmDelete(sorter):
     if sorter.options['forceDelete']:
         return True
     print("Source directory is: %s" % sorter.options['sourceDir'])
-    response = raw_input ('Delete source directory? [y/N] ')
+    response = input ('Delete source directory? [y/N] ')
     if response == 'y' or response == 'yes':
         return True
     return False
