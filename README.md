@@ -21,11 +21,16 @@ dicomsort returns with a count for both DICOM files organized and non-DICOM (or 
 It aborts with an error if it is to overwrite any existing file.
 
 
-Usage
------
+Installation
+------------
 
+```bash
+pip install thedicomsort
 ```
-% dicomsort.py --help
+
+
+```bash
+% dicomsort --help
 dicomsort [options...] sourceDir targetDir/<patterns>
 
  where [options...] can be:
@@ -45,7 +50,7 @@ dicomsort [options...] sourceDir targetDir/<patterns>
  names based on the dicom tags in the file.
 
 If patterns are not specified, the following default is used:
- 
+
   %PatientName-%Modality%StudyID-%StudyDescription-%StudyDate/%SeriesNumber_%SeriesDescription-%InstanceNumber.dcm
 
 Example 1:
@@ -64,9 +69,3 @@ Example 2:
   output directory DicomTargetDir. The folder structure will be created using
   the default pattern with symbolic links to the source dicom data files.
 ```
-
-Requires
-========
-Python 2.x or 3.x
-
-pydicom
