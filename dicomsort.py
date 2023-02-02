@@ -265,7 +265,7 @@ class DICOMSorter(object):
                 if self.options['verbose']:
                     print("Copied %s, to %s" % (file,path))
         except (IOError, os.error) as why:
-            print( "Dicom file copy/symlink IO error on output pathname >%s< Exception >%s<" % (path,str(why)) ) 
+            print( "Dicom file copy/symlink IO error on output pathname >%s< Exception >%s<" % (path,str(why)) )
             if self.options['deleteSource'] or self.options['forceDelete']:
                 print ("Halting execution on IO error because delteSource or forceDelete options could cause data loss.")
                 sys.exit(1)
@@ -482,8 +482,7 @@ def confirmDelete(sorter):
         return True
     return False
 
-
-if __name__ == '__main__':
+def main():
     sorter = DICOMSorter()
     try:
         parseArgs(sorter,sys.argv[1:])
@@ -512,6 +511,9 @@ if __name__ == '__main__':
         print (str(e))
         traceback.print_exc()
         os._exit(1)
+
+if __name__ == '__main__':
+    main()
 
 # }}}
 
