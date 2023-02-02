@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "thedicomsort"
+version = "1.0.0"
+description = "The original best and only project to provide custom sorting and renaming of DICOM files"
+authors = ["Steve Pieper <pieper@isomics.com>", "Theodore Aptekarev <aptekarev+thedicomsort@gmail.com>"]
+readme = "README.md"
+packages = [
+    { include = "dicomsort.py" },
+]
+
+[tool.poetry.scripts]
+dicomsort = 'dicomsort:main'
+
+
+[tool.poetry.dependencies]
+python = "^3.7"
+pydicom = "^2.3.1"
+
+[tool.poetry.group.dev.dependencies]
+poetry = "^1.3.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
