@@ -164,14 +164,16 @@ class DICOMSorter(object):
                 key = ""
                 while True:
                     c = p[i]
-                    i += 1
-                    if not c.isalpha() or i >= end:
-                        fmt += ")s"
-                        i -= 1
-                        break
-                    else:
+                    if c.isalpha():
                         fmt += c
                         key += c
+                    else:
+                        fmt += ")s"
+                        break
+                    i += 1
+                    if i >= end:
+                        fmt += ")s"
+                        break
                 keys.append(key)
             else:
                 fmt += c
