@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "thedicomsort"
-version = "1.0.0"
+version = "1.0.1"
 description = "The original best and only project to provide custom sorting and renaming of DICOM files"
 authors = ["Steve Pieper <pieper@isomics.com>", "Theodore Aptekarev <aptekarev+thedicomsort@gmail.com>"]
 readme = "README.md"
