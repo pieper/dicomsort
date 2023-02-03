@@ -21,18 +21,23 @@ dicomsort returns with a count for both DICOM files organized and non-DICOM (or 
 It aborts with an error if it is to overwrite any existing file.
 
 
-Usage
------
+Installation
+------------
 
+```bash
+pip install thedicomsort
 ```
-% dicomsort.py --help
+
+
+```bash
+% dicomsort --help
 dicomsort [options...] sourceDir targetDir/<patterns>
 
  where [options...] can be:
     [-z,--compressTargets] - create a .zip file in the target directory
     [-d,--deleteSource] - remove source files/directories after sorting
     [-f,--forceDelete] - remove source without confirmation
-    [-k,--keepGoing] - report but ignore dupicate target files
+    [-k,--keepGoing] - report but ignore duplicate target files
     [-v,--verbose] - print diagnostics while processing
     [-s,--symlink] - create a symlink to dicom files in sourceDir instead of copying them
     [-t,--test] - run the built in self test (requires internet)
@@ -45,7 +50,7 @@ dicomsort [options...] sourceDir targetDir/<patterns>
  names based on the dicom tags in the file.
 
 If patterns are not specified, the following default is used:
- 
+
   %PatientName-%Modality%StudyID-%StudyDescription-%StudyDate/%SeriesNumber_%SeriesDescription-%InstanceNumber.dcm
 
 Example 1:
@@ -60,13 +65,7 @@ Example 2:
 
   find DicomSourceDir/ | grep "IMA$" | dicomsort -s "" DicomTargetDir
 
-  would scan DicomSourceDir for file pathnames ending in IMA and create an
+  would scan DicomSourceDir for file path names ending in IMA and create an
   output directory DicomTargetDir. The folder structure will be created using
   the default pattern with symbolic links to the source dicom data files.
 ```
-
-Requires
-========
-Python 2.x or 3.x
-
-pydicom

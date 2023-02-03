@@ -15,15 +15,15 @@
     See the License.txt file or http://slicer.org for full text.
 """
 
-
 # {{{ packages and logging utilities
 
 # standard python includes
-import sys, os, traceback
+import sys
+import os
+import traceback
 import shutil
-import time
 import tempfile
-import urllib
+import urllib.request
 import zipfile
 
 # special public packages
@@ -97,7 +97,7 @@ class DICOMSorter(object):
         complaining if require options are missing, and filling in
         optional options with default values if not specified"""
         for option in self.requiredOptions:
-            if not option in options:
+            if option not in options:
                 return False
         for option in self.defaultOptions:
             if option not in options:
@@ -113,7 +113,7 @@ class DICOMSorter(object):
 
     def safeFileName(self,fileName):
         """Remove any potentially dangerous or confusing characters from
-        the file name by mapping them to reasonable subsitutes"""
+        the file name by mapping them to reasonable substitutes"""
         underscores = r"""+`~!@#$%^&*(){}[]/=\|<>,.":' """
         safeName = ""
         for c in fileName:
@@ -242,7 +242,7 @@ class DICOMSorter(object):
             return False
 
         # check for valid path - abort program to avoid overwrite
-        path = self.pathFromDatasetPattern(ds, safe=(not sorter.options['unsafe']))
+        path = self.pathFromDatasetPattern(ds, safe=(not self.options['unsafe']))
         if os.path.exists(path):
             print('\nSource file: %s' % file)
             print('Target file: %s' % path)
@@ -267,9 +267,9 @@ class DICOMSorter(object):
                 if self.options['verbose']:
                     print("Copied %s, to %s" % (file,path))
         except (IOError, os.error) as why:
-            print( "Dicom file copy/symlink IO error on output pathname >%s< Exception >%s<" % (path,str(why)) ) 
+            print( "Dicom file copy/symlink IO error on output pathname >%s< Exception >%s<" % (path,str(why)) )
             if self.options['deleteSource'] or self.options['forceDelete']:
-                print ("Halting execution on IO error because delteSource or forceDelete options could cause data loss.")
+                print ("Halting execution on IO error because deleteSource or forceDelete options could cause data loss.")
                 sys.exit(1)
 
         # keep track of files and new directories
@@ -343,7 +343,7 @@ class DownloadHelper(object):
         self.downloadPercent = 0
         print('Requesting download of %s from %s...\n' % (destination, url))
         try:
-            urllib.urlretrieve(url, destination, self.downloadReportHook)
+            urllib.request.urlretrieve(url, destination, self.downloadReportHook)
             print('Download finished')
         except IOError as e:
             print('Download failed: %s' % e)
@@ -363,7 +363,7 @@ dicomsort [options...] sourceDir targetDir/<patterns>
     [-z,--compressTargets] - create a .zip file in the target directory
     [-d,--deleteSource] - remove source files/directories after sorting
     [-f,--forceDelete] - remove source without confirmation
-    [-k,--keepGoing] - report but ignore dupicate target files
+    [-k,--keepGoing] - report but ignore duplicate target files
     [-v,--verbose] - print diagnostics while processing
     [-s,--symlink] - create a symlink to dicom files in sourceDir instead of copying them
     [-t,--test] - run the built in self test (requires internet)
@@ -391,7 +391,7 @@ Example 2:
 
   find DicomSourceDir/ | grep "IMA$" | dicomsort -s "" DicomTargetDir
 
-  would scan DicomSourceDir for file pathnames ending in IMA and create an
+  would scan DicomSourceDir for file path names ending in IMA and create an
   output directory DicomTargetDir. The folder structure will be created using
   the default pattern with symbolic links to the source dicom data files.
 """
@@ -432,7 +432,7 @@ def selfTest(sorter):
     targetDir = os.path.join(tempfile.tempdir, 'dicomsort-output')
     if os.path.exists(targetDir):
         shutil.rmtree(targetDir)
-    targetPattern = targetDir + '/%PatientName/%StudyDesciption-%StudyDate/%SeriesDescription-%SeriesNumber-%InstanceNumber.dcm'
+    targetPattern = targetDir + '/%PatientName/%StudyDescription-%StudyDate/%SeriesDescription-%SeriesNumber-%InstanceNumber.dcm'
     options = sorter.options
     options['sourceDir'] = dataDir
     options['targetPattern'] = targetPattern
@@ -472,7 +472,7 @@ def parseArgs(sorter,args):
         print ("Source directory does not exist: %s" % options['sourceDir'])
         sys.exit(1)
     if options['symlink'] and (options['compressTargets'] or options['deleteSource'] or options['forceDelete']):
-        print ("symlink option is not compatible with compressTargets, delteSource, or forceDelete options")
+        print ("symlink option is not compatible with compressTargets, deleteSource, or forceDelete options")
         sys.exit(1)
 
 def confirmDelete(sorter):
@@ -484,8 +484,7 @@ def confirmDelete(sorter):
         return True
     return False
 
-
-if __name__ == '__main__':
+def main():
     sorter = DICOMSorter()
     try:
         parseArgs(sorter,sys.argv[1:])
@@ -514,6 +513,9 @@ if __name__ == '__main__':
         print (str(e))
         traceback.print_exc()
         os._exit(1)
+
+if __name__ == '__main__':
+    main()
 
 # }}}
 
