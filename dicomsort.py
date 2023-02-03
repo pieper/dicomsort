@@ -18,9 +18,10 @@
 # {{{ packages and logging utilities
 
 # standard python includes
-import sys, os, traceback
+import sys
+import os
+import traceback
 import shutil
-import time
 import tempfile
 import urllib.request
 import zipfile
@@ -96,7 +97,7 @@ class DICOMSorter(object):
         complaining if require options are missing, and filling in
         optional options with default values if not specified"""
         for option in self.requiredOptions:
-            if not option in options:
+            if option not in options:
                 return False
         for option in self.defaultOptions:
             if option not in options:
