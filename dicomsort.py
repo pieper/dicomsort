@@ -15,7 +15,6 @@
     See the License.txt file or http://slicer.org for full text.
 """
 
-
 # {{{ packages and logging utilities
 
 # standard python includes
@@ -113,7 +112,7 @@ class DICOMSorter(object):
 
     def safeFileName(self,fileName):
         """Remove any potentially dangerous or confusing characters from
-        the file name by mapping them to reasonable subsitutes"""
+        the file name by mapping them to reasonable substitutes"""
         underscores = r"""+`~!@#$%^&*(){}[]/=\|<>,.":' """
         safeName = ""
         for c in fileName:
@@ -267,7 +266,7 @@ class DICOMSorter(object):
         except (IOError, os.error) as why:
             print( "Dicom file copy/symlink IO error on output pathname >%s< Exception >%s<" % (path,str(why)) )
             if self.options['deleteSource'] or self.options['forceDelete']:
-                print ("Halting execution on IO error because delteSource or forceDelete options could cause data loss.")
+                print ("Halting execution on IO error because deleteSource or forceDelete options could cause data loss.")
                 sys.exit(1)
 
         # keep track of files and new directories
@@ -361,7 +360,7 @@ dicomsort [options...] sourceDir targetDir/<patterns>
     [-z,--compressTargets] - create a .zip file in the target directory
     [-d,--deleteSource] - remove source files/directories after sorting
     [-f,--forceDelete] - remove source without confirmation
-    [-k,--keepGoing] - report but ignore dupicate target files
+    [-k,--keepGoing] - report but ignore duplicate target files
     [-v,--verbose] - print diagnostics while processing
     [-s,--symlink] - create a symlink to dicom files in sourceDir instead of copying them
     [-t,--test] - run the built in self test (requires internet)
@@ -389,7 +388,7 @@ Example 2:
 
   find DicomSourceDir/ | grep "IMA$" | dicomsort -s "" DicomTargetDir
 
-  would scan DicomSourceDir for file pathnames ending in IMA and create an
+  would scan DicomSourceDir for file path names ending in IMA and create an
   output directory DicomTargetDir. The folder structure will be created using
   the default pattern with symbolic links to the source dicom data files.
 """
@@ -430,7 +429,7 @@ def selfTest(sorter):
     targetDir = os.path.join(tempfile.tempdir, 'dicomsort-output')
     if os.path.exists(targetDir):
         shutil.rmtree(targetDir)
-    targetPattern = targetDir + '/%PatientName/%StudyDesciption-%StudyDate/%SeriesDescription-%SeriesNumber-%InstanceNumber.dcm'
+    targetPattern = targetDir + '/%PatientName/%StudyDescription-%StudyDate/%SeriesDescription-%SeriesNumber-%InstanceNumber.dcm'
     options = sorter.options
     options['sourceDir'] = dataDir
     options['targetPattern'] = targetPattern
@@ -470,7 +469,7 @@ def parseArgs(sorter,args):
         print ("Source directory does not exist: %s" % options['sourceDir'])
         sys.exit(1)
     if options['symlink'] and (options['compressTargets'] or options['deleteSource'] or options['forceDelete']):
-        print ("symlink option is not compatible with compressTargets, delteSource, or forceDelete options")
+        print ("symlink option is not compatible with compressTargets, deleteSource, or forceDelete options")
         sys.exit(1)
 
 def confirmDelete(sorter):
