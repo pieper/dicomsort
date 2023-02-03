@@ -240,7 +240,7 @@ class DICOMSorter(object):
             return False
 
         # check for valid path - abort program to avoid overwrite
-        path = self.pathFromDatasetPattern(ds, safe=(not sorter.options['unsafe']))
+        path = self.pathFromDatasetPattern(ds, safe=(not self.options['unsafe']))
         if os.path.exists(path):
             print('\nSource file: %s' % file)
             print('Target file: %s' % path)
