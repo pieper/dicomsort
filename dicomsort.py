@@ -23,7 +23,7 @@ import sys, os, traceback
 import shutil
 import time
 import tempfile
-import urllib
+import urllib.request
 import zipfile
 
 # special public packages
@@ -341,7 +341,7 @@ class DownloadHelper(object):
         self.downloadPercent = 0
         print('Requesting download of %s from %s...\n' % (destination, url))
         try:
-            urllib.urlretrieve(url, destination, self.downloadReportHook)
+            urllib.request.urlretrieve(url, destination, self.downloadReportHook)
             print('Download finished')
         except IOError as e:
             print('Download failed: %s' % e)
