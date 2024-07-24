@@ -40,6 +40,7 @@ dicomsort [options...] sourceDir targetDir/<patterns>
     [-k,--keepGoing] - report but ignore duplicate target files
     [-v,--verbose] - print diagnostics while processing
     [-s,--symlink] - create a symlink to dicom files in sourceDir instead of copying them
+    [-m, --move] - move files to the target directory
     [-t,--test] - run the built in self test (requires internet)
     [-u,--unsafe] - do not replace unsafe characters with '_' in the path
     [--help] - print this message
