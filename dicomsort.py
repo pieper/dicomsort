@@ -234,7 +234,7 @@ class DICOMSorter(object):
         Return true on success"""
         # check for dicom file
         try:
-            ds = dicom.read_file(file,stop_before_pixels=True)
+            ds = dicom.dcmread(file,stop_before_pixels=True)
         except (IOError, os.error) as why:
             print( "dicom.read_file() IO error on file %s, exception %s" % (file,str(why)) )
             return False
